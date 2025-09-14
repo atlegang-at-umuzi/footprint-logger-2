@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Carbon Footprint Logger</title>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      .auth-link {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: background 0.3s ease;
+      }
+      
+      .auth-link:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .demo-notice {
+        background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        color: #333;
+        padding: 15px 30px;
+        text-align: center;
+        font-weight: 600;
+        border-radius: 10px;
+        margin-bottom: 20px;
+      }
+
+      .demo-notice a {
+        color: #2d5a27;
+        text-decoration: underline;
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <a href="/login" class="auth-link">Login / Register</a>
+    
+    <main class="container">
+      <header class="header">
+        <h1>Carbon Footprint Tracker</h1>
+        <p>Track your daily activities and monitor your environmental impact</p>
+      </header>
+
+      <div class="demo-notice">
+        <p>You're using the demo version. <a href="/login">Login or register</a> to save your data and access community features!</p>
+      </div>
+
+      <div class="main-content">
+        <div class="input-section">
+          <h2 class="section-title">Add Activity</h2>
+
+          <div class="form-group">
+            <label for="category">Category:</label>
+            <select id="category">
+              <option value="">Select a category</option>
+              <option value="transport">🚗 Transport</option>
+              <option value="energy">⚡ Energy</option>
+              <option value="food">🍽️ Food</option>
+              <option value="waste">🗑️ Waste</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="activity">Activity:</label>
+            <select id="activity">
+              <option value="">Select an activity</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="amount">Amount:</label>
+            <input
+              type="number"
+              id="amount"
+              placeholder="Enter amount"
+              step="0.1"
+              min="0"
+            />
+          </div>
+
+          <button class="add-btn" onclick="addActivity()">Add Activity</button>
+        </div>
+
+        <div class="summary-section">
+          <h2 class="section-title">Your Impact Summary</h2>
+
+          <div class="total-emissions">
+            <div class="total-number" id="totalEmissions">0.0</div>
+            <div class="total-label">kg CO₂ today</div>
+          </div>
+
+          <div class="filter-section">
+            <div class="filter-buttons">
+              <button
+                class="filter-btn active"
+                onclick="filterActivities('all')"
+              >
+                All
+              </button>
+              <button
+                class="filter-btn"
+                onclick="filterActivities('transport')"
+              >
+                Transport
+              </button>
+              <button class="filter-btn" onclick="filterActivities('energy')">
+                Energy
+              </button>
+              <button class="filter-btn" onclick="filterActivities('food')">
+                Food
+              </button>
+              <button class="filter-btn" onclick="filterActivities('waste')">
+                Waste
+              </button>
+            </div>
+          </div>
+
+          <div class="activities-list" id="activitiesList">
+            <p style="text-align: center; color: #6c757d; padding: 20px">
+              No activities added yet. Start tracking your carbon footprint!
+            </p>
+          </div>
+
+          <div class="chart">
+            <div class="chart-container">
+              <div class="chart-title">Emissions by Category</div>
+              <div class="chart-bars" id="chartBars"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
