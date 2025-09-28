@@ -20,7 +20,8 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrcAttr: ["'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
     },
   },
@@ -42,32 +43,98 @@ app.use(limiter);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-app.use(express.static('public'));
+
+// Static files - try multiple locations
+const publicPath = path.join(__dirname, 'public');
+const altPublicPath = path.join(__dirname, '..', 'public');
+
+// Check which public directory exists
+const fs = require('fs');
+let staticPath;
+
+if (fs.existsSync(publicPath)) {
+  staticPath = publicPath;
+  console.log('Using public directory:', publicPath);
+} else if (fs.existsSync(altPublicPath)) {
+  staticPath = altPublicPath;
+  console.log('Using public directory:', altPublicPath);
+} else {
+  console.warn('No public directory found. Creating one...');
+  fs.mkdirSync(publicPath);
+  staticPath = publicPath;
+}
+
+app.use(express.static(staticPath));
 
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/carbon-tracker', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-.then(() => console.log('Connected to MongoDB'))
-.catch(err => console.error('MongoDB connection error:', err));
+.then(() => console.log('✓ Connected to MongoDB'))
+.catch(err => console.error('✗ MongoDB connection error:', err));
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
-// Serve static files
+// Serve HTML files with error handling
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+  const indexPath = path.join(staticPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send(`
+      <h1>Welcome to Carbon Footprint Tracker</h1>
+      <p>Frontend files not found. Please ensure the following files exist in the public directory:</p>
+      <ul>
+        <li>index.html</li>
+        <li>login.html</li>
+        <li>dashboard.html</li>
+        <li>script.js</li>
+        <li>styles.css</li>
+      </ul>
+      <p>Expected public directory: <code>${staticPath}</code></p>
+      <p><a href="/api/auth/me">Test API</a></p>
+    `);
+  }
 });
 
 app.get('/login', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
+  const loginPath = path.join(staticPath, 'login.html');
+  if (fs.existsSync(loginPath)) {
+    res.sendFile(loginPath);
+  } else {
+    res.status(404).send(`
+      <h1>Login Page Not Found</h1>
+      <p>Please create <code>login.html</code> in: <code>${staticPath}</code></p>
+      <p><a href="/">Go to Home</a></p>
+    `);
+  }
 });
 
 app.get('/dashboard', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+  const dashboardPath = path.join(staticPath, 'dashboard.html');
+  if (fs.existsSync(dashboardPath)) {
+    res.sendFile(dashboardPath);
+  } else {
+    res.status(404).send(`
+      <h1>Dashboard Page Not Found</h1>
+      <p>Please create <code>dashboard.html</code> in: <code>${staticPath}</code></p>
+      <p><a href="/">Go to Home</a></p>
+    `);
+  }
+});
+
+// API health check
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    message: 'Carbon Tracker API is running',
+    timestamp: new Date().toISOString(),
+    publicPath: staticPath
+  });
 });
 
 // Error handling middleware
@@ -82,5 +149,8 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`📁 Static files served from: ${staticPath}`);
+  console.log(`🔗 Login: http://localhost:${PORT}/login`);
+  console.log(`🔗 Dashboard: http://localhost:${PORT}/dashboard`);
 });
