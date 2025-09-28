@@ -28,7 +28,9 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: process.env.NODE_ENV === 'production' 
+    ? true  
+    : 'http://localhost:3000',
   credentials: true
 }));
 
@@ -78,6 +80,20 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/carbon-tr
 app.use('/api/auth', authRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+
+app.get('*', (req, res) => {
+  // Don't interfere with API routes
+  if (req.path.startsWith('/api/')) {
+    return next();
+  }
+  
+  const indexPath = path.join(staticPath, 'index.html');
+  if (fs.existsSync(indexPath)) {
+    res.sendFile(indexPath);
+  } else {
+    res.status(404).send('Frontend files not found');
+  }
+});
 
 // Serve HTML files with error handling
 app.get('/', (req, res) => {
